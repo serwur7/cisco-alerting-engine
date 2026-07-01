@@ -1,3 +1,4 @@
+Markdown
 # cisco-event-alerting-engine
 
 An automated, event-driven network observability and alerting tool designed for Cisco IOS XE infrastructures. The application continuously monitors network interface states via **RESTCONF API** (utilizing the `ietf-interfaces` YANG model) and dispatches immediate, secure **SMTP email notifications** upon detecting critical state changes (e.g., link failures, `up` to `down` transitions).
@@ -23,7 +24,6 @@ cisco-alert-engine/
 ├── requirements.txt        # Third-party Python dependencies
 ├── net_alerting_engine.py  # Core engine source code
 └── README.md               # Technical documentation
-
 Prerequisites
 Python: Version 3.10 or higher.
 
@@ -34,6 +34,7 @@ SMTP Gateway: Dedicated service email account with App Passwords capability enab
 Configuration & Environment Setup
 The application dynamically sources execution payloads from a secure environment file. Populate your local credentials by copying the provided infrastructure template:
 
+Bash
 cp .env.example .env
 Ensure the generated .env file contains contiguous string values without raw formatting spaces:
 
