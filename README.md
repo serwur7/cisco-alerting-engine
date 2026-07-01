@@ -24,21 +24,24 @@ cisco-alert-engine/
 ├── requirements.txt        # Third-party Python dependencies
 ├── net_alerting_engine.py  # Core engine source code
 └── README.md               # Technical documentation
-Prerequisites
-Python: Version 3.10 or higher.
+```
 
-Target Node: Cisco IOS XE instance with RESTCONF enabled (Fully tested against Cisco DevNet Sandbox Always-On IOS XE Node).
+## Prerequisites
 
-SMTP Gateway: Dedicated service email account with App Passwords capability enabled.
+* **Python:** Version 3.10 or higher.
+* **Target Node:** Cisco IOS XE instance with RESTCONF enabled (Fully tested against *Cisco DevNet Sandbox Always-On IOS XE Node*).
+* **SMTP Gateway:** Dedicated service email account with App Passwords capability enabled.
 
-Configuration & Environment Setup
+## Configuration & Environment Setup
+
 The application dynamically sources execution payloads from a secure environment file. Populate your local credentials by copying the provided infrastructure template:
 
-Bash
+```bash
 cp .env.example .env
-Ensure the generated .env file contains contiguous string values without raw formatting spaces:
+```
 
-Ini, TOML
+Ensure the generated `.env` file contains contiguous string values without raw formatting spaces:
+```ini
 DEVICE_HOST=sandbox-iosxe-recomm-1.cisco.com
 DEVICE_USER=developer
 DEVICE_PASS=C1sco12345
@@ -47,32 +50,37 @@ SMTP_PORT=587
 EMAIL_SENDER=projectalarmbot@gmail.com
 EMAIL_PASS=yourclean16characterpassword
 EMAIL_RECEIVER=target_operator@uczelnia.edu.pl
-Local Installation
-Initialize and isolate your execution runtime space:
+```
 
-Bash
-python -m venv .venv
-Activate the virtual container context:
+## Local Installation
 
-Windows (PowerShell/CMD): .venv\Scripts\activate
+1. Initialize and isolate your execution runtime space:
+   ```bash
+   python -m venv .venv
+   ```
+2. Activate the virtual container context:
+   * **Windows (PowerShell/CMD):** `.venv\Scripts\activate`
+   * **Linux/macOS:** `source .venv/bin/activate`
+3. Execute dependency hydration via package manager:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Linux/macOS: source .venv/bin/activate
+## Execution
 
-Execute dependency hydration via package manager:
-
-Bash
-pip install -r requirements.txt
-Execution
 Launch the core automation observability loop inside your active environment:
 
-Bash
+```bash
 python net_alerting_engine.py
-Verification & Audit Trails
-Upon initial bootstrap, the engine takes a network infrastructure snapshot and stores it in the local runtime thread. Every operational log statement is transactionally recorded inside network_monitor.log:
+```
 
-Plaintext
+## Verification & Audit Trails
+
+Upon initial bootstrap, the engine takes a network infrastructure snapshot and stores it in the local runtime thread. Every operational log statement is transactionally recorded inside `network_monitor.log`:
+
+```text
 2026-07-01 22:00:00 [INFO] Starting Event-Driven Alerting Engine on host sandbox-iosxe-recomm-1.cisco.com...
 2026-07-01 22:00:02 [INFO] Initialized monitoring: GigabitEthernet1 (Status: up)
 2026-07-01 22:00:02 [INFO] Initialized monitoring: Loopback0 (Status: up)
 2026-07-01 22:05:30 [WARNING] STATE CHANGE: GigabitEthernet1 (up -> down)
-2026-07-01 22:05:31 [INFO] Alert dispatched: GigabitEthernet1 -> target_operator@wsei.edu.pl
+2026-07-01 22:05:31 [INFO] Alert dispatched: GigabitEthernet1 -> target_operator@microsoft.wsei.edu.pl
