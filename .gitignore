@@ -1,0 +1,6 @@
+# Pliki ignorowane przez system kontroli wersji
+.env
+__pycache__/
+*.log
+venv/
+.venv/

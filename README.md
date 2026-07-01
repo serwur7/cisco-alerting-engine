@@ -1,62 +1,77 @@
-\# Cisco IOS XE Event-Driven Alerting Engine (mini-xMatters)
+# cisco-event-alerting-engine
 
+An automated, event-driven network observability and alerting tool designed for Cisco IOS XE infrastructures. The application continuously monitors network interface states via **RESTCONF API** (utilizing the `ietf-interfaces` YANG model) and dispatches immediate, secure **SMTP email notifications** upon detecting critical state changes (e.g., link failures, `up` to `down` transitions).
 
+Built with operational efficiency and secure development practices in mind.
 
-\## 1. Opis Projektu
+## Core Features
 
-Projekt realizuje zadanie z sekcji \*\*Monitoring i Analiza Sieci\*\* w ramach przedmiotu DevNet Cisco Associate. Narzędzie stanowi autonomiczny, bezagentowy system ciągłego monitorowania infrastruktury sieciowej (Network Observability Core). 
+* **Stateful Monitoring:** Maintains a local in-memory cache of the infrastructure state to perform edge-triggered delta analysis, avoiding repetitive alert spam.
+* **Modern Telemetry Interface:** Utilizes structured programmatic RESTCONF API requests over HTTPS instead of legacy, insecure SNMP polling or heavy CLI screen scraping.
+* **Production-Grade Logging:** Dual-destination logging infrastructure that outputs directly to the system console and appends detailed audit trails into a persistent local log file.
+* **Decoupled Configuration:** Strict separation of sensitive credentials from source code using environment variable injection.
 
+## Project Structure
 
+```text
+cisco-alert-engine/
+│
+├── .venv/                  # Isolated Python Virtual Environment (Local only)
+├── .env                    # Production configuration containing credentials (Ignored by Git)
+├── .env.example            # Template deployment file for configuration reference
+├── .gitignore              # Version control exclusion rules
+├── requirements.txt        # Third-party Python dependencies
+├── net_alerting_engine.py  # Core engine source code
+└── README.md               # Technical documentation
 
-W nowoczesnych środowiskach NetDevOps, natychmiastowa informacja o awarii interfejsu (np. link-flap lub awaria sprzętowa) decyduje o dotrzymaniu umów SLA. Aplikacja eliminuje potrzebę manualnej weryfikacji stanu sieci lub podatnego na opóźnienia odpytywania SNMP. Wykorzystuje zaawansowany protokół \*\*RESTCONF\*\* oraz model danych \*\*IETF (ietf-interfaces)\*\* do wykrywania incydentów w czasie rzeczywistym i natychmiastowego eskalowania ich drogą mailową za pomocą protokołu \*\*SMTP\*\*.
+Prerequisites
+Python: Version 3.10 or higher.
 
+Target Node: Cisco IOS XE instance with RESTCONF enabled (Fully tested against Cisco DevNet Sandbox Always-On IOS XE Node).
 
+SMTP Gateway: Dedicated service email account with App Passwords capability enabled.
 
-\## 2. Architektura i Przepływ Danych (Dataflow)
+Configuration & Environment Setup
+The application dynamically sources execution payloads from a secure environment file. Populate your local credentials by copying the provided infrastructure template:
 
-1\. \*\*Pętla Monitorująca (Polling):\*\* Skrypt w zdefiniowanym interwale (domyślnie 30s) wysyła zapytania HTTP GET do interfejsu RESTCONF urządzenia Cisco.
+cp .env.example .env
+Ensure the generated .env file contains contiguous string values without raw formatting spaces:
 
-2\. \*\*Analiza Stanu (State Management):\*\* Skrypt przechowuje stan interfejsów w pamięci lokalnej. Algorytm porównuje stan historyczny $T\_{-1}$ ze stanem aktualnym $T\_{0}$.
+Ini, TOML
+DEVICE_HOST=sandbox-iosxe-recomm-1.cisco.com
+DEVICE_USER=developer
+DEVICE_PASS=C1sco12345
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+EMAIL_SENDER=projectalarmbot@gmail.com
+EMAIL_PASS=yourclean16characterpassword
+EMAIL_RECEIVER=target_operator@uczelnia.edu.pl
+Local Installation
+Initialize and isolate your execution runtime space:
 
-3\. \*\*Eskalacja (Alerting):\*\* W przypadku wykrycia przejścia interfejsu w stan `down`, uruchamiany jest wątek komunikacyjny ze strukturą serwerów SMTP, generujący dedykowaną depeszę alarmową o priorytecie CRITICAL.
+Bash
+python -m venv .venv
+Activate the virtual container context:
 
-4\. \*\*Logowanie (Persistence):\*\* Wszystkie zdarzenia (sukcesy, błędy połączeń, zmiany stanów) są asynchronicznie zapisywane do rotowanego pliku logów `network\_monitor.log`.
+Windows (PowerShell/CMD): .venv\Scripts\activate
 
+Linux/macOS: source .venv/bin/activate
 
+Execute dependency hydration via package manager:
 
-\## 3. Wykorzystane Technologie i API
+Bash
+pip install -r requirements.txt
+Execution
+Launch the core automation observability loop inside your active environment:
 
-\* \*\*Język programowania:\*\* Python 3.x
+Bash
+python net_alerting_engine.py
+Verification & Audit Trails
+Upon initial bootstrap, the engine takes a network infrastructure snapshot and stores it in the local runtime thread. Every operational log statement is transactionally recorded inside network_monitor.log:
 
-\* \*\*API Sieciowe:\*\* RESTCONF (Port TCP 443)
-
-\* \*\*Model danych YANG:\*\* `ietf-interfaces:interfaces-state`
-
-\* \*\*Protokół komunikacji alarmowej:\*\* SMTP ze wsparciem dla szyfrowania TLS
-
-\* \*\*Środowisko testowe:\*\* Cisco DevNet Sandbox (Always-On IOS XE Recommended Track)
-
-
-
-\## 4. Instalacja i Wdrożenie
-
-
-
-\### Wymagania sprzętowo-programowe
-
-\* Python 3.8 lub nowszy
-
-\* Pakiet instalacyjny `pip`
-
-
-
-\### Instrukcja krok po kroku
-
-1\. Pobierz lub sklonuj zawartość folderu projektowego.
-
-2\. Zainstaluj bibliotekę odpowiedzialną za obsługę zapytań HTTP API:
-
-&#x20;  ```bash
-
-&#x20;  pip install requests
-
+Plaintext
+2026-07-01 22:00:00 [INFO] Starting Event-Driven Alerting Engine on host sandbox-iosxe-recomm-1.cisco.com...
+2026-07-01 22:00:02 [INFO] Initialized monitoring: GigabitEthernet1 (Status: up)
+2026-07-01 22:00:02 [INFO] Initialized monitoring: Loopback0 (Status: up)
+2026-07-01 22:05:30 [WARNING] STATE CHANGE: GigabitEthernet1 (up -> down)
+2026-07-01 22:05:31 [INFO] Alert dispatched: GigabitEthernet1 -> target_operator@wsei.edu.pl
