@@ -6,6 +6,7 @@ import requests
 import urllib3
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+from logging.handlers import TimedRotatingFileHandler
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,16 +28,36 @@ EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASS")
 EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 
-# Enterprise logging configuration (Rotates daily logically by admin if needed)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("network_monitor.log", encoding="utf-8"),
-        logging.StreamHandler()
-    ]
-)
 
+# Enforce full control over the root logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Define enterprise-grade logging format
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+
+# Brutally clear any hidden default handlers that might block the stream
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+# 1. Rotating File Handler: Executes a clean cut at midnight and archives (keeps 7 days)
+file_handler = TimedRotatingFileHandler(
+    filename="network_monitor.log",
+    when="midnight",
+    interval=1,
+    backupCount=7,  # Adjust as needed - retention policy in days
+    encoding="utf-8"
+)
+file_handler.setFormatter(formatter)
+file_handler.suffix = "%Y-%m-%d" # Files will be saved as e.g., network_monitor.log.2026-07-02
+
+# 2. Stream Handler: Live standard output for terminal viewing
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+# Attach handlers to the main alerting engine
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
 class NetworkMonitor:
     def __init__(self):
         self.previous_state = {}
