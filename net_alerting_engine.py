@@ -45,11 +45,11 @@ file_handler = TimedRotatingFileHandler(
     filename="network_monitor.log",
     when="midnight",
     interval=1,
-    backupCount=7,  # Adjust as needed - retention policy in days
+    backupCount=7,  
     encoding="utf-8"
 )
 file_handler.setFormatter(formatter)
-file_handler.suffix = "%Y-%m-%d" # Files will be saved as e.g., network_monitor.log.2026-07-02
+file_handler.suffix = "%Y-%m-%d" 
 
 # 2. Stream Handler: Live standard output for terminal viewing
 stream_handler = logging.StreamHandler()
@@ -58,9 +58,11 @@ stream_handler.setFormatter(formatter)
 # Attach handlers to the main alerting engine
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
+
 class NetworkMonitor:
     def __init__(self):
         self.previous_state = {}
+        self.is_reachable = True  # Dodany stan osiągalności węzła
 
     def send_email_alert(self, interface_name, old_status, new_status):
         """Dispatches an immediate SMTP alert upon interface failure."""
@@ -90,8 +92,13 @@ class NetworkMonitor:
         try:
             response = requests.get(URL, auth=(USER, PASS), headers=HEADERS, verify=False, timeout=10)
             response.raise_for_status()
-            data = response.json()
             
+            # Zero-Noise I/O: Logujemy tylko powrót z martwych
+            if not self.is_reachable:
+                logging.info(f"Target Node {HOST} Reconnected. Resuming monitoring.")
+                self.is_reachable = True
+
+            data = response.json()
             interfaces = data.get("ietf-interfaces:interfaces-state", {}).get("interface", [])
             
             for iface in interfaces:
@@ -104,7 +111,7 @@ class NetworkMonitor:
                     logging.info(f"Initialized monitoring: {name} (Status: {current_status})")
                     continue
                 
-                # Evaluate state change
+                # Evaluate state change (Delta-Check)
                 old_status = self.previous_state[name]
                 if current_status != old_status:
                     logging.warning(f"STATE CHANGE: {name} ({old_status} -> {current_status})")
@@ -115,7 +122,10 @@ class NetworkMonitor:
                     self.previous_state[name] = current_status
                     
         except requests.exceptions.RequestException as e:
-            logging.error(f"RESTCONF API Connection Error: {e}")
+            # Zero-Noise I/O: Logujemy awarię tylko za pierwszym razem
+            if self.is_reachable:
+                logging.critical(f"Target Node {HOST} Unreachable. Suppressing further connection errors.")
+                self.is_reachable = False
 
 if __name__ == "__main__":
     # Validate environment payload
