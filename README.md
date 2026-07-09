@@ -8,6 +8,8 @@ Built with operational efficiency, zero-noise policies, and secure development p
 
 * **Stateful Observability (Delta-Check):** Maintains a local in-memory cache of the infrastructure state. The engine performs edge-triggered delta analysis, triggering SMTP dispatch *only* upon critical state transitions (e.g., `UP -> DOWN`), entirely eliminating alert fatigue.
 
+* **Target Node Reachability (Disaster Recovery):** Incorporates an advanced state machine to track API target availability. In the event of a total node failure, the engine suppresses repetitive `Timeout/ConnectionError` exceptions, logging the catastrophic failure and subsequent recovery strictly once, guaranteeing Zero-Noise I/O even during complete infrastructure outages.
+
 * **Zero-Noise I/O Policy:** Designed for maximum performance, the system writes to the disk exclusively when a state change is detected. Routine baseline checks bypass the disk layer, optimizing server I/O resources.
 
 * **Automated Log Rotation:** Implements a robust `TimedRotatingFileHandler`. Operational logs are autonomously archived at midnight with a strict 7-day retention policy, ensuring the system footprint remains sustainable without manual intervention.
@@ -95,11 +97,13 @@ network_monitor.log.2026-07-01
 network_monitor.log.2026-07-02
 ```
 
-**Standard Audit Trail Example:**
+**Standard Audit Trail Example (Including Node Failure):**
 ```text
 2026-07-02 22:00:00 [INFO] Starting Event-Driven Alerting Engine on host 10.10.20.48...
 2026-07-02 22:00:02 [INFO] Initialized monitoring: GigabitEthernet1 (Status: up)
 2026-07-02 22:00:02 [INFO] Initialized monitoring: Loopback10 (Status: up)
 2026-07-02 22:05:30 [WARNING] STATE CHANGE: Loopback10 (up -> down)
 2026-07-02 22:05:31 [INFO] Alert dispatched: Loopback10 -> target_operator@uczelnia.edu.pl
+2026-07-02 23:45:10 [CRITICAL] Target Node 10.10.20.48 Unreachable. Suppressing further connection errors.
+2026-07-03 08:15:20 [INFO] Target Node 10.10.20.48 Reconnected. Resuming monitoring.
 ```

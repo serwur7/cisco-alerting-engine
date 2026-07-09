@@ -62,7 +62,7 @@ logger.addHandler(stream_handler)
 class NetworkMonitor:
     def __init__(self):
         self.previous_state = {}
-        self.is_reachable = True  # Dodany stan osiągalności węzła
+        self.is_reachable = True  # Track node reachability state to prevent log spam
 
     def send_email_alert(self, interface_name, old_status, new_status):
         """Dispatches an immediate SMTP alert upon interface failure."""
@@ -93,7 +93,7 @@ class NetworkMonitor:
             response = requests.get(URL, auth=(USER, PASS), headers=HEADERS, verify=False, timeout=10)
             response.raise_for_status()
             
-            # Zero-Noise I/O: Logujemy tylko powrót z martwych
+            # Zero-Noise I/O: Log node recovery only once
             if not self.is_reachable:
                 logging.info(f"Target Node {HOST} Reconnected. Resuming monitoring.")
                 self.is_reachable = True
@@ -122,7 +122,7 @@ class NetworkMonitor:
                     self.previous_state[name] = current_status
                     
         except requests.exceptions.RequestException as e:
-            # Zero-Noise I/O: Logujemy awarię tylko za pierwszym razem
+            # Zero-Noise I/O: Log critical failure only once
             if self.is_reachable:
                 logging.critical(f"Target Node {HOST} Unreachable. Suppressing further connection errors.")
                 self.is_reachable = False
