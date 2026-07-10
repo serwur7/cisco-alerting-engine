@@ -29,14 +29,14 @@ EMAIL_PASSWORD = os.getenv("EMAIL_PASS")
 EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 
 
-# Enforce full control over the root logger
+# Enforce control over the root logger
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Define enterprise-grade logging format
+# Define logging format
 formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
 
-# Brutally clear any hidden default handlers that might block the stream
+# Clear any hidden default handlers that might block the stream
 if logger.hasHandlers():
     logger.handlers.clear()
 
@@ -111,7 +111,7 @@ class NetworkMonitor:
                     logging.info(f"Initialized monitoring: {name} (Status: {current_status})")
                     continue
                 
-                # Evaluate state change (Delta-Check)
+                # Evaluate state change
                 old_status = self.previous_state[name]
                 if current_status != old_status:
                     logging.warning(f"STATE CHANGE: {name} ({old_status} -> {current_status})")
