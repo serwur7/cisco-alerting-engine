@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cisco_alerting"
+version = "1.0.0"
+description = "Automated NetDevOps Alerting Engine for Cisco RESTCONF"
+authors = [{ name = "Kamil", email = "kamil.siedlak@microsoft.wsei.edu.com" }]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31.0",
+    "urllib3>=2.0.0",
+    "python-dotenv>=1.0.1"
+]
+
+[project.scripts]
+cisco-monitor = "cisco_alerting.cli:main"
