@@ -1,4 +1,4 @@
-Markdown
+
 # Cisco Event-Driven Alerting Engine
 
 An automated, event-driven network observability and alerting tool designed for Cisco IOS XE infrastructures. The application continuously monitors network interface states via the RESTCONF API (utilizing the `ietf-interfaces` YANG model) and dispatches immediate, secure SMTP email notifications upon detecting critical state changes.
